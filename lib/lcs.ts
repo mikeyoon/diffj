@@ -1,15 +1,16 @@
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
+/** @author Michael Yoon */
 
-exports.compare = compare;
-exports.reduce = reduce;
+type Matrix = any[][];
 
-var REMOVE, RIGHT, ADD, DOWN, SKIP;
-
-exports.REMOVE = REMOVE = RIGHT = -1;
-exports.ADD    = ADD    = DOWN  =  1;
-exports.EQUAL  = SKIP   = 0;
+export const REMOVE = -1;
+export const RIGHT = REMOVE;
+export const ADD = 1;
+export const DOWN = ADD;
+export const EQUAL = 0;
+export const SKIP = EQUAL;
 
 /**
  * Create an lcs comparison matrix describing the differences
@@ -18,19 +19,19 @@ exports.EQUAL  = SKIP   = 0;
  * @param {array} b array-like
  * @returns {object} lcs descriptor, suitable for passing to reduce()
  */
-function compare(a, b) {
-	var cols = a.length;
-	var rows = b.length;
+export function compare<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
+	let cols = a.length;
+	let rows = b.length;
 
-	var prefix = findPrefix(a, b);
-	var suffix = prefix < cols && prefix < rows
-		? findSuffix(a, b, prefix)
+	const prefix = findPrefix(a, b);
+	const suffix = prefix < cols && prefix < rows
+		? findSuffix(a, b/*, prefix*/)
 		: 0;
 
-	var remove = suffix + prefix - 1;
+	let remove = suffix + prefix - 1;
 	cols -= remove;
 	rows -= remove;
-	var matrix = createMatrix(cols, rows);
+	let matrix = createMatrix(cols, rows);
 
 	for (var j = cols - 1; j >= 0; --j) {
 		for (var i = rows - 1; i >= 0; --i) {
@@ -57,7 +58,7 @@ function compare(a, b) {
  * @param {object} lcs results returned by compare()
  * @returns {*} the final reduced value
  */
-function reduce(f, r, lcs) {
+export function reduce(f: (result: any, type: number, i: number, j:number) => any, r: any, lcs: any) {
 	var i, j, k, op;
 
 	var m = lcs.matrix;
@@ -95,7 +96,7 @@ function reduce(f, r, lcs) {
 	return r;
 }
 
-function findPrefix(a, b) {
+function findPrefix<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
 	var i = 0;
 	var l = Math.min(a.length, b.length);
 	while(i < l && a[i] === b[i]) {
@@ -104,7 +105,7 @@ function findPrefix(a, b) {
 	return i;
 }
 
-function findSuffix(a, b) {
+function findSuffix<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
 	var al = a.length - 1;
 	var bl = b.length - 1;
 	var l = Math.min(al, bl);
@@ -115,7 +116,7 @@ function findSuffix(a, b) {
 	return i;
 }
 
-function backtrack(matrix, a, b, start, j, i) {
+function backtrack<T>(matrix: Matrix, a: ArrayLike<T>, b: ArrayLike<T>, start: number, j: number, i: number) {
 	if (a[j+start] === b[i+start]) {
 		return { value: matrix[i + 1][j + 1].value, type: SKIP };
 	}
@@ -126,17 +127,17 @@ function backtrack(matrix, a, b, start, j, i) {
 	return { value: matrix[i + 1][j].value + 1, type: DOWN };
 }
 
-function createMatrix (cols, rows) {
-	var m = [], i, j, lastrow;
+function createMatrix (cols: number, rows: number): Matrix {
+	let m: Matrix = [];
 
 	// Fill the last row
-	lastrow = m[rows] = [];
-	for (j = 0; j<cols; ++j) {
+	let lastrow: any[] = m[rows] = [];
+	for (let j = 0; j<cols; ++j) {
 		lastrow[j] = { value: cols - j, type: RIGHT };
 	}
 
 	// Fill the last col
-	for (i = 0; i<rows; ++i) {
+	for (let i = 0; i<rows; ++i) {
 		m[i] = [];
 		m[i][cols] = { value: rows - i, type: DOWN };
 	}

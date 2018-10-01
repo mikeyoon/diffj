@@ -1,5 +1,6 @@
-var commuteRtL = require('./commute').rtl;
-var inverse = require('./inverse');
+import { inverse } from "./inverse";
+import { Operation } from "./jsonPatch";
+import { commuteRtL } from "./commute";
 
 /**
  * Given a patch history (array of patches) and a single patch, rooted
@@ -9,8 +10,8 @@ var inverse = require('./inverse');
  * @param {array} patch JSON Patch
  * @returns {array} rebased patch which can be applied after history
  */
-module.exports = function rebase(history, patch) {
+export function rebase(history: Array<Operation[]>, patch: Operation) {
 	return history.reduce(function(commuted, patchFromHistory) {
 		return commuteRtL(inverse(patchFromHistory), commuted);
 	}, patch);
-};
+}

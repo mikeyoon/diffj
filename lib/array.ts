@@ -1,10 +1,7 @@
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
-
-exports.cons = cons;
-exports.tail = tail;
-exports.map = map;
+/** @author Michael Yoon */
 
 /**
  * Prepend x to a, without mutating a. Faster than a.unshift(x)
@@ -12,12 +9,12 @@ exports.map = map;
  * @param {Array} a array-like
  * @returns {Array} new Array with x prepended
  */
-function cons(x, a) {
-	var l = a.length;
-	var b = new Array(l+1);
+export function cons<T>(x: T, a: ArrayLike<T>): ArrayLike<T> {
+	const l = a.length;
+	const b = new Array<T>(l + 1);
 	b[0] = x;
-	for(var i=0; i<l; ++i) {
-		b[i+1] = a[i];
+	for (let i = 0; i < l; ++i) {
+		b[i + 1] = a[i];
 	}
 
 	return b;
@@ -29,11 +26,11 @@ function cons(x, a) {
  * @param {Array} a array-like
  * @returns {Array} new Array, the equivalent of a.slice(1)
  */
-function tail(a) {
-	var l = a.length-1;
-	var b = new Array(l);
-	for(var i=0; i<l; ++i) {
-		b[i] = a[i+1];
+export function tail<T>(a: ArrayLike<T>): ArrayLike<T> {
+	const l = a.length - 1;
+	const b = new Array<T>(l);
+	for (let i = 0; i < l; ++i) {
+		b[i] = a[i + 1];
 	}
 
 	return b;
@@ -45,9 +42,9 @@ function tail(a) {
  * @param {Array} a array-like
  * @returns {Array} new Array mapped by f
  */
-function map(f, a) {
-	var b = new Array(a.length);
-	for(var i=0; i< a.length; ++i) {
+function map<T, U>(f: (e: T) => U, a: ArrayLike<T>): ArrayLike<U> {
+	const b = new Array<U>(a.length);
+	for (var i = 0; i < a.length; ++i) {
 		b[i] = f(a[i]);
 	}
 	return b;

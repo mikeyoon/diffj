@@ -14,16 +14,15 @@
     "patch",
     "json pointer"
   ],
-  "author": "brian@hovercraftstudios.com",
+  "author": "Mike Yoon",
   "license": "MIT",
   "devDependencies": {
-    "buster": "~0.7",
-    "gent": "0.6.2",
-    "jshint": "~2",
-    "json-patch-test-suite": "^1.0.1"
+    "json-patch-test-suite": "^1.1.0",
+    "ts-error": "^1.0.3",
+    "typescript": "3.1.1"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/cujojs/jiff.git"
+    "url": "git://github.com/mikeyoon/jiff.git"
   }
 }

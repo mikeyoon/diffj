@@ -1,12 +1,10 @@
-module.exports = deepEquals;
-
 /**
  * Compare 2 JSON values, or recursively compare 2 JSON objects or arrays
  * @param {object|array|string|number|boolean|null} a
  * @param {object|array|string|number|boolean|null} b
  * @returns {boolean} true iff a and b are recursively equal
  */
-function deepEquals(a, b) {
+export function deepEquals(a: any, b: any): boolean {
 	if(a === b) {
 		return true;
 	}
@@ -22,7 +20,7 @@ function deepEquals(a, b) {
 	return false;
 }
 
-function compareArrays(a, b) {
+function compareArrays<T>(a: ArrayLike<T>, b: ArrayLike<T>): boolean {
 	if(a.length !== b.length) {
 		return false;
 	}
@@ -36,7 +34,7 @@ function compareArrays(a, b) {
 	return true;
 }
 
-function compareObjects(a, b) {
+function compareObjects(a: any, b: any): boolean {
 	if((a === null && b !== null) || (a !== null && b === null)) {
 		return false;
 	}

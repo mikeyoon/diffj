@@ -1,24 +1,28 @@
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
+/** @author Michael Yoon */
 
-var lcs = require('./lib/lcs');
-var array = require('./lib/array');
-var patch = require('./lib/jsonPatch');
-var inverse = require('./lib/inverse');
-var jsonPointer = require('./lib/jsonPointer');
+import * as lcs from './lib/lcs';
+import * as array from './lib/array';
+import * as patch from './lib/jsonPatch';
+import * as inverse from './lib/inverse';
+import * as jsonPointer from './lib/jsonPointer';
+
 var encodeSegment = jsonPointer.encodeSegment;
 
 exports.diff = diff;
 exports.patch = patch.apply;
 exports.patchInPlace = patch.applyInPlace;
 exports.inverse = inverse;
-exports.clone = patch.clone;
+
+export const clone = patch.clone;
+export { inverse };
 
 // Errors
-exports.InvalidPatchOperationError = require('./lib/InvalidPatchOperationError');
-exports.TestFailedError = require('./lib/TestFailedError');
-exports.PatchNotInvertibleError = require('./lib/PatchNotInvertibleError');
+export { InvalidPatchOperationError } from './lib/InvalidPatchOperationError';
+export { TestFailedError } from './lib/TestFailedError';
+export { PatchNotInvertibleError } from './lib/PatchNotInvertibleError';
 
 var isValidObject = patch.isValidObject;
 var defaultHash = patch.defaultHash;

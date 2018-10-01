@@ -1,13 +1,12 @@
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
+/** @author Michael Yoon */
 
-module.exports = jsonPointerParse;
-
-var parseRx = /\/|~1|~0/g;
-var separator = '/';
-var escapeChar = '~';
-var encodedSeparator = '~1';
+const parseRx = /\/|~1|~0/g;
+const separator = "/";
+const escapeChar = "~";
+const encodedSeparator = "~1";
 
 /**
  * Parse through an encoded JSON Pointer string, decoding each path segment
@@ -17,22 +16,23 @@ var encodedSeparator = '~1';
  * @param {{function(segment:string):boolean}} onSegment callback function
  * @returns {string} original path
  */
-function jsonPointerParse(path, onSegment) {
-	var pos, accum, matches, match;
-
-	pos = path.charAt(0) === separator ? 1 : 0;
-	accum = '';
+export function jsonPointerParse(
+	path: string,
+	onSegment: (segment: string) => boolean
+) {
+	let pos = path.charAt(0) === separator ? 1 : 0;
+	let accum = "";
+	let matches: RegExpExecArray | null;
 	parseRx.lastIndex = pos;
 
-	while(matches = parseRx.exec(path)) {
-
-		match = matches[0];
+	while ((matches = parseRx.exec(path))) {
+		const match = matches[0];
 		accum += path.slice(pos, parseRx.lastIndex - match.length);
 		pos = parseRx.lastIndex;
 
-		if(match === separator) {
+		if (match === separator) {
 			if (onSegment(accum) === false) return path;
-			accum = '';
+			accum = "";
 		} else {
 			accum += match === encodedSeparator ? separator : escapeChar;
 		}

@@ -2,28 +2,27 @@
 /** @author Brian Cavalier */
 /** @author John Hann */
 
-var _parse = require('./jsonPointerParse');
+import { jsonPointerParse as _parse } from "./jsonPointerParse";
 
-exports.find = find;
-exports.join = join;
-exports.absolute = absolute;
-exports.parse = parse;
-exports.contains = contains;
-exports.encodeSegment = encodeSegment;
-exports.decodeSegment = decodeSegment;
-exports.parseArrayIndex = parseArrayIndex;
-exports.isValidArrayIndex = isValidArrayIndex;
+interface FindContext {
+	(index: number, a: any[], context: any): number;
+}
+
+export interface Pointer {
+	target: any;
+	key: string | number | undefined;
+}
 
 // http://tools.ietf.org/html/rfc6901#page-2
-var separator = '/';
-var separatorRx = /\//g;
-var encodedSeparator = '~1';
-var encodedSeparatorRx = /~1/g;
+const separator = "/";
+const separatorRx = /\//g;
+const encodedSeparator = "~1";
+const encodedSeparatorRx = /~1/g;
 
-var escapeChar = '~';
-var escapeRx = /~/g;
-var encodedEscape = '~0';
-var encodedEscapeRx = /~0/g;
+const escapeChar = "~";
+const escapeRx = /~/g;
+const encodedEscape = "~0";
+const encodedEscapeRx = /~0/g;
 
 /**
  * Find the parent of the specified path in x and return a descriptor
@@ -39,63 +38,66 @@ var encodedEscapeRx = /~0/g;
  *  also be provided.
  * @returns {{target:object|array|number|string, key:string}|undefined}
  */
-function find(x, path, findContext, context) {
-	if(typeof path !== 'string') {
+export function find(x: any, path: string, findContext?: FindContext, context?: any) {
+	if (typeof path !== "string") {
 		return;
 	}
 
-	if(path === '') {
+	if (path === "") {
 		// whole document
 		return { target: x, key: void 0 };
 	}
 
-	if(path === separator) {
-		return { target: x, key: '' };
+	if (path === separator) {
+		return { target: x, key: "" };
 	}
 
-	var parent = x, key;
+	var parent = x,
+		key;
 	var hasContext = context !== void 0;
 
 	_parse(path, function(segment) {
 		// hm... this seems like it should be if(typeof x === 'undefined')
-		if(x == null) {
+		if (x == null) {
 			// Signal that we prematurely hit the end of the path hierarchy.
 			parent = null;
 			return false;
 		}
 
-		if(Array.isArray(x)) {
+		if (Array.isArray(x)) {
 			key = hasContext
 				? findIndex(findContext, parseArrayIndex(segment), x, context)
-				: segment === '-' ? segment : parseArrayIndex(segment);
+				: segment === "-"
+					? segment
+					: parseArrayIndex(segment);
 		} else {
 			key = segment;
 		}
 
 		parent = x;
 		x = x[key];
+
+		return true;
 	});
 
-	return parent === null
-		? void 0
-		: { target: parent, key: key };
+	return parent === null ? void 0 : { target: parent, key: key };
 }
 
-function absolute(path) {
+export function absolute(path: string) {
 	return path[0] === separator ? path : separator + path;
 }
 
-function join(segments) {
+export function join(segments: string[]) {
 	return segments.join(separator);
 }
 
-function parse(path) {
-	var segments = [];
+export function parse(path: string) {
+	const segments: string[] = [];
 	_parse(path, segments.push.bind(segments));
 	return segments;
 }
 
-function contains(a, b) {
+export function contains(a: string, b: string) {
 	return b.indexOf(a) === 0 && b[a.length] === separator;
 }
 
@@ -105,9 +107,11 @@ function contains(a, b) {
  * @param {string} s encoded segment
  * @returns {string} decoded segment
  */
-function decodeSegment(s) {
+export function decodeSegment(s: string) {
 	// See: http://tools.ietf.org/html/rfc6901#page-3
-	return s.replace(encodedSeparatorRx, separator).replace(encodedEscapeRx, escapeChar);
+	return s
+		.replace(encodedSeparatorRx, separator)
+		.replace(encodedEscapeRx, escapeChar);
 }
 
 /**
@@ -116,18 +120,20 @@ function decodeSegment(s) {
  * @param {string} s decoded segment
  * @returns {string} encoded segment
  */
-function encodeSegment(s) {
-	return s.replace(escapeRx, encodedEscape).replace(separatorRx, encodedSeparator);
+export function encodeSegment(s: string) {
+	return s
+		.replace(escapeRx, encodedEscape)
+		.replace(separatorRx, encodedSeparator);
 }
 
-var arrayIndexRx = /^(0|[1-9]\d*)$/;
+const arrayIndexRx = /^(0|[1-9]\d*)$/;
 
 /**
  * Return true if s is a valid JSON Pointer array index
  * @param {String} s
  * @returns {boolean}
  */
-function isValidArrayIndex(s) {
+export function isValidArrayIndex(s: string) {
 	return arrayIndexRx.test(s);
 }
 
@@ -136,25 +142,25 @@ function isValidArrayIndex(s) {
  * @param {string} s numeric string
  * @returns {number} number >= 0
  */
-function parseArrayIndex (s) {
-	if(isValidArrayIndex(s)) {
+export function parseArrayIndex(s: string) {
+	if (isValidArrayIndex(s)) {
 		return +s;
 	}
 
-	throw new SyntaxError('invalid array index ' + s);
+	throw new SyntaxError("invalid array index " + s);
 }
 
-function findIndex (findContext, start, array, context) {
-	var index = start;
+function findIndex(findContext: FindContext | undefined, start: number, array, context) {
+	let index = start;
 
-	if(index < 0) {
-		throw new Error('array index out of bounds ' + index);
+	if (index < 0) {
+		throw new Error("array index out of bounds " + index);
 	}
 
-	if(context !== void 0 && typeof findContext === 'function') {
+	if (context !== void 0 && typeof findContext === "function") {
 		index = findContext(start, array, context);
-		if(index < 0) {
-			throw new Error('could not find patch context ' + context);
+		if (index < 0) {
+			throw new Error("could not find patch context " + context);
 		}
 	}
 
