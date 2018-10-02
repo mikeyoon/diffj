@@ -50,6 +50,7 @@ export interface CopyOperation {
 	path: string;
 	context?: any;
 	from: any;
+	fromContext?: any;
 }
 
 export enum OpType {
@@ -61,7 +62,7 @@ export enum OpType {
 	Copy = "copy"
 }
 
-import * as patches from './patches'; 
+import * as patches from './patches';
 import { clone } from './clone';
 import { InvalidPatchOperationError } from './InvalidPatchOperationError';
 
@@ -93,31 +94,46 @@ export function applyInPlace(changes: Operation | Operation[], x: any, options: 
 		return x;
 	}
 
-	var patch, p;
 	for (var i = 0; i < changes.length; ++i) {
-		p = changes[i];
-		patch = patches[p.op];
+		const p = changes[i];
 
-		if (patch === void 0) {
-			throw new InvalidPatchOperationError("invalid op " + JSON.stringify(p));
+		switch (p.op) {
+			case OpType.Add:
+				x = patches[p.op].apply(x, p, options);
+				break;
+			case OpType.Copy:
+				x = patches[p.op].apply(x, p, options);
+				break;
+			case OpType.Move:
+				x = patches[p.op].apply(x, p, options);
+				break;
+			case OpType.Remove:
+				x = patches[p.op].apply(x, p, options);
+				break;
+			case OpType.Replace:
+				x = patches[p.op].apply(x, p, options);
+				break;
+			case OpType.Test:
+				x = patches[p.op].apply(x, p, options);
+				break;
+			default:
+				throw new InvalidPatchOperationError("invalid op " + JSON.stringify(p));
 		}
-
-		x = patch.apply(x, p, options);
 	}
 
 	return x;
 }
 
-export function defaultHash(x) {
+export function defaultHash(x: any) {
 	return isValidObject(x) || isArray(x) ? JSON.stringify(x) : x;
 }
 
-export function isValidObject(x) {
-	return x !== null && Object.prototype.toString.call(x) === "[object Object]";
+export function isValidObject(x: any) {
+	return x != null && Object.prototype.toString.call(x) === "[object Object]";
 }
 
 export { clone } from './clone';
 
-function isArray(x) {
+function isArray(x: any[]) {
 	return Object.prototype.toString.call(x) === "[object Array]";
 }

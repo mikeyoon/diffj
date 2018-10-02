@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@types/node@^10.11.3":
+  version "10.11.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.3.tgz#c055536ac8a5e871701aa01914be5731539d01ee"
+
 json-patch-test-suite@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/json-patch-test-suite/-/json-patch-test-suite-1.1.0.tgz#e12a7f067371ce6953b55fa8d6e2f64800916711"

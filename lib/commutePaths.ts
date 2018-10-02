@@ -34,9 +34,9 @@ export function commutePaths<LT extends Operation, RT extends Operation>(
 
 function commuteTreePaths<LT extends Operation, RT extends Operation>(
 	a: LT,
-	left: any[],
+	_left: any[],
 	b: RT,
-	right: any[]
+	_right: any[]
 ): [RT, LT] {
 	if (a.path === b.path) {
 		throw new TypeError(
@@ -144,7 +144,7 @@ function commuteArraySiblings<LT extends Operation, RT extends Operation>(
 function commuteArrayAncestor(
 	l: Operation,
 	lpath: any[],
-	r: Operation,
+	_r: Operation,
 	rpath: any[],
 	direction: 1 | -1
 ) {

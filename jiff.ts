@@ -5,27 +5,38 @@
 
 import * as lcs from './lib/lcs';
 import * as array from './lib/array';
-import * as patch from './lib/jsonPatch';
 import * as inverse from './lib/inverse';
-import * as jsonPointer from './lib/jsonPointer';
+import { encodeSegment } from './lib/jsonPointer';
+import { Operation, isValidObject, defaultHash, OpType } from './lib/jsonPatch';
 
-var encodeSegment = jsonPointer.encodeSegment;
-
-exports.diff = diff;
-exports.patch = patch.apply;
-exports.patchInPlace = patch.applyInPlace;
-exports.inverse = inverse;
-
-export const clone = patch.clone;
+export { clone } from './lib/jsonPatch';
 export { inverse };
+export { apply as patch } from './lib/jsonPatch';
+export { applyInPlace as patchInPlace } from './lib/jsonPatch';
 
 // Errors
 export { InvalidPatchOperationError } from './lib/InvalidPatchOperationError';
 export { TestFailedError } from './lib/TestFailedError';
 export { PatchNotInvertibleError } from './lib/PatchNotInvertibleError';
 
-var isValidObject = patch.isValidObject;
-var defaultHash = patch.defaultHash;
+export interface PatchOptions {
+	findContext?: (index: number, array: any[]) => number;
+}
+
+export interface DiffOptions {
+	hash?: (x: any) => string | number;
+	makeContext?: (index: number, array: any[]) => any;
+	invertible?: boolean;
+	shallowArray?: boolean;
+}
+
+interface State {
+	patch: Operation[];
+	hash: (x: any) => string | number;
+	invertible: boolean;
+	shallowArray: boolean;
+	makeContext: (index: number, array: any[]) => any;
+}
 
 /**
  * Compute a JSON Patch representing the differences between a and b.
@@ -38,7 +49,7 @@ var defaultHash = patch.defaultHash;
  *  used to generate patch context. If not provided, context will not be generated
  * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
-function diff(a, b, options) {
+export function diff(a: any, b: any, options: DiffOptions) {
 	return appendChanges(a, b, '', initState(options, [])).patch;
 }
 
@@ -49,20 +60,22 @@ function diff(a, b, options) {
  *  the diff should generate new patch operations
  * @returns {object} initialized diff state
  */
-function initState(options, patch) {
+function initState(options: DiffOptions, patch: Operation[]) {
 	if(typeof options === 'object') {
 		return {
 			patch: patch,
 			hash: orElse(isFunction, options.hash, defaultHash),
 			makeContext: orElse(isFunction, options.makeContext, defaultContext),
-			invertible: !(options.invertible === false)
+			invertible: !(options.invertible === false),
+			shallowArray: !(options.shallowArray === false)
 		};
 	} else {
 		return {
 			patch: patch,
 			hash: orElse(isFunction, options, defaultHash),
 			makeContext: defaultContext,
-			invertible: true
+			invertible: true,
+			shallowArray: false
 		};
 	}
 }
@@ -76,7 +89,7 @@ function initState(options, patch) {
  * @param {object} state
  * @returns {Object} updated diff state
  */
-function appendChanges(a, b, path, state) {
+function appendChanges(a: any, b: any, path: string, state: State) {
 	if(Array.isArray(a) && Array.isArray(b)) {
 		return appendArrayChanges(a, b, path, state);
 	}
@@ -96,7 +109,7 @@ function appendChanges(a, b, path, state) {
  * @param {object} state
  * @returns {Object} updated diff state
  */
-function appendObjectChanges(o1, o2, path, state) {
+function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
 	var keys = Object.keys(o2);
 	var patch = state.patch;
 	var i, key;
@@ -107,7 +120,7 @@ function appendObjectChanges(o1, o2, path, state) {
 		if(o1[key] !== void 0) {
 			appendChanges(o1[key], o2[key], keyPath, state);
 		} else {
-			patch.push({ op: 'add', path: keyPath, value: o2[key] });
+			patch.push({ op: OpType.Add, path: keyPath, value: o2[key] });
 		}
 	}
 
@@ -117,9 +130,9 @@ function appendObjectChanges(o1, o2, path, state) {
 		if(o2[key] === void 0) {
 			var p = path + '/' + encodeSegment(key);
 			if(state.invertible) {
-				patch.push({ op: 'test', path: p, value: o1[key] });
+				patch.push({ op: OpType.Test, path: p, value: o1[key] });
 			}
-			patch.push({ op: 'remove', path: p });
+			patch.push({ op: OpType.Remove, path: p });
 		}
 	}
 
@@ -134,7 +147,17 @@ function appendObjectChanges(o1, o2, path, state) {
  * @param {object} state
  * @returns {Object} updated diff state
  */
-function appendArrayChanges(a1, a2, path, state) {
+function appendArrayChanges(a1: any[], a2: any[], path: string, state: State) {
+	if (state.shallowArray && a1 !== a2) {
+		state.patch.push({
+			op: OpType.Replace,
+			value: a2,
+			path: path
+		});
+
+		return state;
+	}
+
 	var a1hash = array.map(state.hash, a1);
 	var a2hash = array.map(state.hash, a2);
 
@@ -154,7 +177,7 @@ function appendArrayChanges(a1, a2, path, state) {
  * @returns {object} new state with JSON Patch operations added based
  *  on the provided lcsMatrix
  */
-function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
+function lcsToJsonPatch(a1: any[], a2: any[], path: string, state: any, lcsMatrix: any) {
 	var offset = 0;
 	return lcs.reduce(function(state, op, i, j) {
 		var last, context;
@@ -205,13 +228,13 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
  * @param {object} state
  * @returns {object} updated diff state
  */
-function appendValueChanges(a, b, path, state) {
+function appendValueChanges(a: string | number | null, b: string | number | null, path: string, state: State) {
 	if(a !== b) {
 		if(state.invertible) {
-			state.patch.push({ op: 'test', path: path, value: a });
+			state.patch.push({ op: OpType.Test, path: path, value: a });
 		}
 
-		state.patch.push({ op: 'replace', path: path, value: b });
+		state.patch.push({ op: OpType.Replace, path: path, value: b });
 	}
 
 	return state;
@@ -223,7 +246,7 @@ function appendValueChanges(a, b, path, state) {
  * @param {*} y
  * @returns {*} x if predicate(x) is truthy, otherwise y
  */
-function orElse(predicate, x, y) {
+function orElse(predicate: (x: any) => boolean, x: any, y: any) {
 	return predicate(x) ? x : y;
 }
 
@@ -239,6 +262,6 @@ function defaultContext() {
  * @param {*} x
  * @returns {boolean} true if x is a function, false otherwise
  */
-function isFunction(x) {
+function isFunction(x: any) {
 	return typeof x === 'function';
 }

@@ -150,7 +150,7 @@ export function parseArrayIndex(s: string) {
 	throw new SyntaxError("invalid array index " + s);
 }
 
-function findIndex(findContext: FindContext | undefined, start: number, array, context) {
+function findIndex(findContext: FindContext | undefined, start: number, array: any[], context: any) {
 	let index = start;
 
 	if (index < 0) {

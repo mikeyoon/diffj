@@ -42,7 +42,7 @@ export function tail<T>(a: ArrayLike<T>): ArrayLike<T> {
  * @param {Array} a array-like
  * @returns {Array} new Array mapped by f
  */
-function map<T, U>(f: (e: T) => U, a: ArrayLike<T>): ArrayLike<U> {
+export function map<T, U>(f: (e: T) => U, a: ArrayLike<T>): ArrayLike<U> {
 	const b = new Array<U>(a.length);
 	for (var i = 0; i < a.length; ++i) {
 		b[i] = f(a[i]);

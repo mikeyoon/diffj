@@ -96,8 +96,8 @@ function applyTest(x: any, test: TestOperation, options: any) {
 function invertTest(
 	pr: Array<Operation>,
 	test: TestOperation,
-	i: number,
-	context: ReadonlyArray<Operation>
+	_i: number,
+	_context: ReadonlyArray<Operation>
 ): number {
 	pr.push(test);
 	return 1;
@@ -154,14 +154,16 @@ function _add(pointer: Pointer, value: any) {
 		// '-' indicates 'append' to array
 		if (pointer.key === "-") {
 			target.push(value);
-		} else if (pointer.key > target.length) {
-			throw new InvalidPatchOperationError(
-				"target of add outside of array bounds"
-			);
-		} else {
-			target.splice(pointer.key, 0, value);
+		} else if (typeof pointer.key === 'number') {
+			if (pointer.key > target.length) {
+				throw new InvalidPatchOperationError(
+					"target of add outside of array bounds"
+				);
+			} else if (Array.isArray(pointer.key)) {
+				target.splice(pointer.key, 0, value);
+			}
 		}
-	} else if (isValidObject(target)) {
+	} else if (isValidObject(target) && pointer.key != null) {
 		target[pointer.key] = value;
 	} else {
 		throw new InvalidPatchOperationError(
@@ -173,8 +175,8 @@ function _add(pointer: Pointer, value: any) {
 function invertAdd(
 	pr: Array<Operation>,
 	add: AddOperation,
-	i: number,
-	c: ReadonlyArray<Operation>
+	_i: number,
+	_c: ReadonlyArray<Operation>
 ) {
 	let context = add.context;
 	if (context !== void 0) {
@@ -209,10 +211,10 @@ function commuteAddOrCopy<A extends Operation, T extends Operation>(
  * @param {object|array} x
  * @param {object} change replace operation
  */
-function applyReplace(x, change, options) {
+function applyReplace(x: any, change: ReplaceOperation, options: any) {
 	var pointer = find(x, change.path, options.findContext, change.context);
 
-	if (notFound(pointer) || missingValue(pointer)) {
+	if (pointer == null || notFound(pointer) || missingValue(pointer)) {
 		throw new InvalidPatchOperationError("path does not exist " + change.path);
 	}
 
@@ -284,11 +286,11 @@ function commuteReplace<R extends Operation, T extends Operation>(
  * @param {object|array} x
  * @param {object} change remove operation
  */
-function applyRemove(x, change, options) {
+function applyRemove(x: any, change: RemoveOperation, options: any) {
 	var pointer = find(x, change.path, options.findContext, change.context);
 
 	// key must exist for remove
-	if (notFound(pointer) || pointer.target[pointer.key] === void 0) {
+	if (pointer == null || notFound(pointer) || pointer.key == null || pointer.target[pointer.key] === void 0) {
 		throw new InvalidPatchOperationError("path does not exist " + change.path);
 	}
 
@@ -296,14 +298,14 @@ function applyRemove(x, change, options) {
 	return x;
 }
 
-function _remove(pointer) {
+function _remove(pointer: Pointer) {
 	var target = pointer.target;
 
 	var removed;
-	if (Array.isArray(target)) {
+	if (Array.isArray(target) && typeof pointer.key === 'string') {
 		removed = target.splice(parseArrayIndex(pointer.key), 1);
 		return removed[0];
-	} else if (isValidObject(target)) {
+	} else if (isValidObject(target) && pointer.key != null) {
 		removed = target[pointer.key];
 		delete target[pointer.key];
 		return removed;
@@ -358,7 +360,7 @@ function commuteRemove<R extends Operation, T extends Operation>(
  * @param {object|array} x
  * @param {object} change move operation
  */
-function applyMove(x, change, options) {
+function applyMove(x: any, change: MoveOperation, options: any) {
 	if (contains(change.path, change.from)) {
 		throw new InvalidPatchOperationError(
 			"move.from cannot be ancestor of move.path"
@@ -368,15 +370,18 @@ function applyMove(x, change, options) {
 	var pto = find(x, change.path, options.findContext, change.context);
 	var pfrom = find(x, change.from, options.findContext, change.fromContext);
 
-	_add(pto, _remove(pfrom));
+	if (pto != null && pfrom != null) {
+		_add(pto, _remove(pfrom));
+	}
+
 	return x;
 }
 
 function invertMove(
 	pr: Operation[],
 	c: MoveOperation,
-	i: number,
-	context: ReadonlyArray<Operation>
+	_i: number,
+	_context: ReadonlyArray<Operation>
 ) {
 	pr.push({
 		op: OpType.Move,
@@ -403,24 +408,29 @@ function commuteMove<M extends Operation, T extends Operation>(move: M, b: T) {
  * @param {object|array} x
  * @param {object} change copy operation
  */
-function applyCopy(x, change, options) {
+function applyCopy(x: any, change: CopyOperation, options: any) {
 	var pto = find(x, change.path, options.findContext, change.context);
 	var pfrom = find(x, change.from, options.findContext, change.fromContext);
 
-	if (notFound(pfrom) || missingValue(pfrom)) {
+	if (pfrom == null || notFound(pfrom) || missingValue(pfrom)) {
 		throw new InvalidPatchOperationError("copy.from must exist");
 	}
 
 	var target = pfrom.target;
 	var value;
 
-	if (Array.isArray(target)) {
-		value = target[parseArrayIndex(pfrom.key)];
-	} else {
-		value = target[pfrom.key];
+	if (pfrom.key != null) {
+		if (Array.isArray(target)) {
+			value = target[parseArrayIndex(pfrom.key)];
+		} else {
+			value = target[pfrom.key];
+		}
 	}
 
-	_add(pto, clone(value));
+	if (pto != null) {
+		_add(pto, clone(value));
+	}
+
 	return x;
 }
 
@@ -437,14 +447,14 @@ function applyCopy(x, change, options) {
 function notInvertible(
 	_: any,
 	c: CopyOperation,
-	i: number,
-	context: ReadonlyArray<Operation>
+	_i: number,
+	_context: ReadonlyArray<Operation>
 ): number {
 	throw new PatchNotInvertibleError("cannot invert " + c.op);
 }
 
 function notFound(pointer: Pointer | undefined) {
-	return pointer === undefined || (pointer.target == null && pointer.key !== void 0);
+	return pointer == null || (pointer.target == null && pointer.key !== void 0);
 }
 
 function missingValue(pointer: Pointer) {
@@ -456,6 +466,6 @@ function missingValue(pointer: Pointer) {
  * @param {*} x
  * @returns {boolean}
  */
-function isValidObject(x) {
+function isValidObject(x: any) {
 	return x !== null && typeof x === "object";
 }
