@@ -3,18 +3,17 @@
 /** @author John Hann */
 /** @author Michael Yoon */
 
-import * as lcs from './lib/lcs';
-import * as array from './lib/array';
-import * as inverse from './lib/inverse';
-import { encodeSegment } from './lib/jsonPointer';
-import { Operation, isValidObject, defaultHash, OpType } from './lib/jsonPatch';
+import * as lcs from "./lib/lcs";
+import * as array from "./lib/array";
+import * as inverse from "./lib/inverse";
+import { encodeSegment } from "./lib/jsonPointer";
+import { Operation, isValidObject, defaultHash, OpType } from "./lib/jsonPatch";
 
 export { inverse };
 
 // Errors
-export { InvalidPatchOperationError } from './lib/InvalidPatchOperationError';
-export { TestFailedError } from './lib/TestFailedError';
-export { PatchNotInvertibleError } from './lib/PatchNotInvertibleError';
+export { TestFailedError } from "./lib/TestFailedError";
+export { PatchNotInvertibleError } from "./lib/PatchNotInvertibleError";
 
 export interface PatchOptions {
 	findContext?: (index: number, array: any[]) => number;
@@ -47,7 +46,7 @@ interface State {
  * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
 export function diff(a: any, b: any, options: DiffOptions) {
-	return appendChanges(a, b, '', initState(options, [])).patch;
+	return appendChanges(a, b, "", initState(options, [])).patch;
 }
 
 /**
@@ -58,7 +57,7 @@ export function diff(a: any, b: any, options: DiffOptions) {
  * @returns {object} initialized diff state
  */
 function initState(options: DiffOptions, patch: Operation[]) {
-	if(typeof options === 'object') {
+	if (typeof options === "object") {
 		return {
 			patch: patch,
 			hash: orElse(isFunction, options.hash, defaultHash),
@@ -87,11 +86,11 @@ function initState(options: DiffOptions, patch: Operation[]) {
  * @returns {Object} updated diff state
  */
 function appendChanges(a: any, b: any, path: string, state: State) {
-	if(Array.isArray(a) && Array.isArray(b)) {
+	if (Array.isArray(a) && Array.isArray(b)) {
 		return appendArrayChanges(a, b, path, state);
 	}
 
-	if(isValidObject(a) && isValidObject(b)) {
+	if (isValidObject(a) && isValidObject(b)) {
 		return appendObjectChanges(a, b, path, state);
 	}
 
@@ -107,14 +106,13 @@ function appendChanges(a: any, b: any, path: string, state: State) {
  * @returns {Object} updated diff state
  */
 function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
-	var keys = Object.keys(o2);
-	var patch = state.patch;
-	var i, key;
+	let keys = Object.keys(o2);
+	const patch = state.patch;
 
-	for(i=keys.length-1; i>=0; --i) {
-		key = keys[i];
-		var keyPath = path + '/' + encodeSegment(key);
-		if(o1[key] !== void 0) {
+	for (let i = keys.length - 1; i >= 0; --i) {
+		const key = keys[i];
+		var keyPath = path + "/" + encodeSegment(key);
+		if (o1[key] !== void 0) {
 			appendChanges(o1[key], o2[key], keyPath, state);
 		} else {
 			patch.push({ op: OpType.Add, path: keyPath, value: o2[key] });
@@ -122,11 +120,11 @@ function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
 	}
 
 	keys = Object.keys(o1);
-	for(i=keys.length-1; i>=0; --i) {
-		key = keys[i];
-		if(o2[key] === void 0) {
-			var p = path + '/' + encodeSegment(key);
-			if(state.invertible) {
+	for (let i = keys.length - 1; i >= 0; --i) {
+		const key = keys[i];
+		if (o2[key] === void 0) {
+			var p = path + "/" + encodeSegment(key);
+			if (state.invertible) {
 				patch.push({ op: OpType.Test, path: p, value: o1[key] });
 			}
 			patch.push({ op: OpType.Remove, path: p });
@@ -174,47 +172,57 @@ function appendArrayChanges(a1: any[], a2: any[], path: string, state: State) {
  * @returns {object} new state with JSON Patch operations added based
  *  on the provided lcsMatrix
  */
-function lcsToJsonPatch(a1: any[], a2: any[], path: string, state: any, lcsMatrix: any) {
+function lcsToJsonPatch(
+	a1: any[],
+	a2: any[],
+	path: string,
+	state: State,
+	lcsMatrix: lcs.LcsMatrix
+) {
 	var offset = 0;
-	return lcs.reduce(function(state, op, i, j) {
-		var last, context;
-		var patch = state.patch;
-		var p = path + '/' + (j + offset);
+	return lcs.reduce(
+		function(state, op, i, j) {
+			var last, context;
+			var patch = state.patch;
+			var p = path + "/" + (j + offset);
 
-		if (op === lcs.REMOVE) {
-			// Coalesce adjacent remove + add into replace
-			last = patch[patch.length-1];
-			context = state.makeContext(j, a1);
+			if (op === lcs.REMOVE) {
+				// Coalesce adjacent remove + add into replace
+				last = patch[patch.length - 1];
+				context = state.makeContext(j, a1);
 
-			if(state.invertible) {
-				patch.push({ op: 'test', path: p, value: a1[j], context: context });
-			}
+				if (state.invertible) {
+					patch.push({ op: OpType.Test, path: p, value: a1[j], context: context });
+				}
 
-			if(last !== void 0 && last.op === 'add' && last.path === p) {
-				last.op = 'replace';
-				last.context = context;
+				if (last !== void 0 && last.op === OpType.Add && last.path === p) {
+					last.op = OpType.Replace;
+					last.context = context;
+				} else {
+					patch.push({ op: OpType.Remove, path: p, context: context });
+				}
+
+				offset -= 1;
+			} else if (op === lcs.ADD) {
+				// See https://tools.ietf.org/html/rfc6902#section-4.1
+				// May use either index===length *or* '-' to indicate appending to array
+				patch.push({
+					op: OpType.Add,
+					path: p,
+					value: a2[i],
+					context: state.makeContext(j, a1)
+				});
+
+				offset += 1;
 			} else {
-				patch.push({ op: 'remove', path: p, context: context });
+				appendChanges(a1[j], a2[i], p, state);
 			}
 
-			offset -= 1;
-
-		} else if (op === lcs.ADD) {
-			// See https://tools.ietf.org/html/rfc6902#section-4.1
-			// May use either index===length *or* '-' to indicate appending to array
-			patch.push({ op: 'add', path: p, value: a2[i],
-				context: state.makeContext(j, a1)
-			});
-
-			offset += 1;
-
-		} else {
-			appendChanges(a1[j], a2[i], p, state);
-		}
-
-		return state;
-
-	}, state, lcsMatrix);
+			return state;
+		},
+		state,
+		lcsMatrix
+	);
 }
 
 /**
@@ -225,9 +233,14 @@ function lcsToJsonPatch(a1: any[], a2: any[], path: string, state: any, lcsMatri
  * @param {object} state
  * @returns {object} updated diff state
  */
-function appendValueChanges(a: string | number | null, b: string | number | null, path: string, state: State) {
-	if(a !== b) {
-		if(state.invertible) {
+function appendValueChanges(
+	a: string | number | null,
+	b: string | number | null,
+	path: string,
+	state: State
+) {
+	if (a !== b) {
+		if (state.invertible) {
 			state.patch.push({ op: OpType.Test, path: path, value: a });
 		}
 
@@ -260,5 +273,5 @@ function defaultContext() {
  * @returns {boolean} true if x is a function, false otherwise
  */
 function isFunction(x: any) {
-	return typeof x === 'function';
+	return typeof x === "function";
 }

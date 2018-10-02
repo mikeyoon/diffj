@@ -5,6 +5,12 @@
 
 type Matrix = any[][];
 
+export interface LcsMatrix {
+	prefix: number;
+	matrix: Matrix;
+	suffix: number;
+}
+
 export const REMOVE = -1;
 export const RIGHT = REMOVE;
 export const ADD = 1;
@@ -19,7 +25,7 @@ export const SKIP = EQUAL;
  * @param {array} b array-like
  * @returns {object} lcs descriptor, suitable for passing to reduce()
  */
-export function compare<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
+export function compare<T>(a: ArrayLike<T>, b: ArrayLike<T>): LcsMatrix {
 	let cols = a.length;
 	let rows = b.length;
 
@@ -58,7 +64,7 @@ export function compare<T>(a: ArrayLike<T>, b: ArrayLike<T>) {
  * @param {object} lcs results returned by compare()
  * @returns {*} the final reduced value
  */
-export function reduce(f: (result: any, type: number, i: number, j:number) => any, r: any, lcs: any) {
+export function reduce<T>(f: (result: T, type: number, i: number, j:number) => any, r: T, lcs: LcsMatrix) {
 	var i, j, k, op;
 
 	var m = lcs.matrix;

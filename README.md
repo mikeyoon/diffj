@@ -1,13 +1,13 @@
-# JSON Diff and Patch
+# JSON Diff
 
-Jiff-d generates [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902)-compliant patches. It does not include apply
+diffj generates [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902)-compliant patches. It does not include apply
 functionality.
 
 It also provides advanced and [experimental APIs](#experimentalapis) based on patch algebra, such as [patch inverses](#inverse) ("reverse" patches), [commutation](#jifflibcommute) (patch reordering).
 
 ## Get it
 
-`npm install --save jiff-d`
+`npm install --save diffj`
 
 ## Example
 

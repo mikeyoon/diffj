@@ -1,10 +1,12 @@
 {
-  "name": "jiff",
-  "version": "0.7.3",
-  "description": "JSON diff and patch based on rfc6902",
-  "main": "jiff",
+  "name": "diffj",
+  "version": "0.5.1",
+  "description": "JSON diff based on rfc6902",
+  "main": "dist/jiff",
   "scripts": {
-    "test": "buster-test -e node"
+    "test": "buster-test -e node",
+    "tsc": "tsc --noEmit",
+    "prepare": "tsc"
   },
   "keywords": [
     "json",
@@ -19,11 +21,13 @@
   "devDependencies": {
     "@types/node": "^10.11.3",
     "json-patch-test-suite": "^1.1.0",
-    "ts-error": "^1.0.3",
     "typescript": "3.1.1"
+  },
+  "dependencies": {
+    "ts-error": "^1.0.3"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/mikeyoon/jiff.git"
+    "url": "git://github.com/mikeyoon/diffj.git"
   }
 }
