@@ -10,6 +10,7 @@ Modification from the original:
 * Converted to Typescript
 * Removed the apply code (there are now other great patchers out there now)
 * Added option to shallow check arrays (I need to diff datasets that are too large for deep equality)
+* Tests are currently broken
 
 ## Get it
 
