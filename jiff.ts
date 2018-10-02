@@ -9,10 +9,7 @@ import * as inverse from './lib/inverse';
 import { encodeSegment } from './lib/jsonPointer';
 import { Operation, isValidObject, defaultHash, OpType } from './lib/jsonPatch';
 
-export { clone } from './lib/jsonPatch';
 export { inverse };
-export { apply as patch } from './lib/jsonPatch';
-export { applyInPlace as patchInPlace } from './lib/jsonPatch';
 
 // Errors
 export { InvalidPatchOperationError } from './lib/InvalidPatchOperationError';
