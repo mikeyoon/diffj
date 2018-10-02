@@ -5,6 +5,12 @@ functionality.
 
 It also provides advanced and [experimental APIs](#experimentalapis) based on patch algebra, such as [patch inverses](#inverse) ("reverse" patches), [commutation](#jifflibcommute) (patch reordering).
 
+Modification from the original:
+
+* Converted to Typescript
+* Removed the apply code (there are now other great patchers out there now)
+* Added option to shallow check arrays (I need to diff datasets that are too large for deep equality)
+
 ## Get it
 
 `npm install --save diffj`
