@@ -109,20 +109,23 @@ function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
 	let keys = Object.keys(o2);
 	const patch = state.patch;
 
+	// test all intersecting are equal, if not, then recursively compare
 	for (let i = keys.length - 1; i >= 0; --i) {
 		const key = keys[i];
 		var keyPath = path + "/" + encodeSegment(key);
-		if (o1[key] !== void 0) {
+		if (key in o1 && o1[key] !== o2[key]) {
 			appendChanges(o1[key], o2[key], keyPath, state);
-		} else {
+		} else if (!(key in o1)) {
+			// if the key doesn't exist in o1, then add
 			patch.push({ op: OpType.Add, path: keyPath, value: o2[key] });
 		}
 	}
 
+	// find all keys that are no longer present in o2 and remove them
 	keys = Object.keys(o1);
 	for (let i = keys.length - 1; i >= 0; --i) {
 		const key = keys[i];
-		if (o2[key] === void 0) {
+		if (!(key in o2)) {
 			var p = path + "/" + encodeSegment(key);
 			if (state.invertible) {
 				patch.push({ op: OpType.Test, path: p, value: o1[key] });
@@ -143,12 +146,16 @@ function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
  * @returns {Object} updated diff state
  */
 function appendArrayChanges(a1: any[], a2: any[], path: string, state: State) {
-	if (state.shallowArray && a1 !== a2) {
-		state.patch.push({
-			op: OpType.Replace,
-			value: a2,
-			path: path
-		});
+	if (state.shallowArray) {
+		if (a1 !== a2) {
+			if (a1.length !== a2.length || a1.some((val, i) => val !== a2[i])) {
+				state.patch.push({
+					op: OpType.Replace,
+					value: a2,
+					path: path
+				});
+			}
+		}
 
 		return state;
 	}

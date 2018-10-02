@@ -1,6 +1,6 @@
 {
   "name": "diffj",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "JSON diff based on rfc6902",
   "main": "dist/jiff",
   "scripts": {
