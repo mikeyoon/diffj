@@ -191,15 +191,16 @@ function getCommonPathPrefix(p1: string[], p2: string[]) {
 }
 
 function copyPatch<T extends Operation>(p: T): T {
-	return Object.assign({}, p);
-	// if (p.op === OpType.Remove) {
-	// 	return { op: p.op, path: p.path };
-	// }
+	const patch = p as Operation;
 
-	// if (p.op === OpType.Copy || p.op === OpType.Move) {
-	// 	return { op: p.op, path: p.path, from: p.from };
-	// }
+	if (patch.op === OpType.Remove) {
+		return { op: patch.op, path: patch.path } as T;
+	}
 
-	// // test, add, replace
-	// return { op: p.op, path: p.path, value: p.value };
+	if (patch.op === OpType.Copy || patch.op === OpType.Move) {
+		return { op: patch.op, path: patch.path, from: patch.from } as T;
+	}
+
+	// test, add, replace
+	return { op: patch.op, path: patch.path, value: patch.value } as T;
 }
