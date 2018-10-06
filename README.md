@@ -1,5 +1,7 @@
 # JSON Diff
 
+Originally forked from: https://github.com/cujojs/jiff
+
 diffj generates [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902)-compliant patches. It does not include apply
 functionality.
 
