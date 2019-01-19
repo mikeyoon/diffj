@@ -10,10 +10,6 @@ json-patch-test-suite@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/json-patch-test-suite/-/json-patch-test-suite-1.1.0.tgz#e12a7f067371ce6953b55fa8d6e2f64800916711"
 
-ts-error@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/ts-error/-/ts-error-1.0.3.tgz#18140ba8b1054c9ba1f2dd2c29156f3671d9427a"
-
 typescript@3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.1.1.tgz#3362ba9dd1e482ebb2355b02dfe8bcd19a2c7c96"

@@ -1,6 +1,6 @@
 {
   "name": "diffj",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "JSON diff based on rfc6902",
   "main": "dist/jiff",
   "scripts": {
@@ -23,9 +23,7 @@
     "json-patch-test-suite": "^1.1.0",
     "typescript": "3.1.1"
   },
-  "dependencies": {
-    "ts-error": "^1.0.3"
-  },
+  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/mikeyoon/diffj.git"

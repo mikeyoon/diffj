@@ -1,3 +1,7 @@
-import { ExtendableError } from "ts-error";
+export class TestFailedError extends Error {
+  constructor(msg: string) {
+    super(msg);
 
-export class TestFailedError extends ExtendableError {}
+    Object.setPrototypeOf(this, TestFailedError.prototype);
+  }
+}

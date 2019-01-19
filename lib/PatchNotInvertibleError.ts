@@ -1,3 +1,7 @@
-import { ExtendableError } from "ts-error";
+export class PatchNotInvertibleError extends Error {
+  constructor(msg: string) {
+    super(msg);
 
-export class PatchNotInvertibleError extends ExtendableError {}
+    Object.setPrototypeOf(this, PatchNotInvertibleError.prototype);
+  }
+}
