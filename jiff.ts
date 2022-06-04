@@ -23,14 +23,14 @@ export interface DiffOptions {
 	hash?: (x: any) => string | number;
 	makeContext?: (index: number, array: any[]) => any;
 	invertible?: boolean;
-	shallowArray?: boolean;
+	allowShallow?: boolean;
 }
 
 interface State {
 	patch: Operation[];
 	hash: (x: any) => string | number;
 	invertible: boolean;
-	shallowArray: boolean;
+	allowShallow: boolean;
 	makeContext: (index: number, array: any[]) => any;
 }
 
@@ -63,7 +63,7 @@ function initState(options: DiffOptions, patch: Operation[]) {
 			hash: orElse(isFunction, options.hash, defaultHash),
 			makeContext: orElse(isFunction, options.makeContext, defaultContext),
 			invertible: !(options.invertible === false),
-			shallowArray: !(options.shallowArray === false)
+			allowShallow: !(options.allowShallow === false)
 		};
 	} else {
 		return {
@@ -71,7 +71,7 @@ function initState(options: DiffOptions, patch: Operation[]) {
 			hash: orElse(isFunction, options, defaultHash),
 			makeContext: defaultContext,
 			invertible: true,
-			shallowArray: false
+			allowShallow: false
 		};
 	}
 }
@@ -106,12 +106,28 @@ function appendChanges(a: any, b: any, path: string, state: State) {
  * @returns {Object} updated diff state
  */
 function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
-	let keys = Object.keys(o2);
+	const o1Keys = Object.keys(o1);
+	const o2Keys = Object.keys(o2);
 	const patch = state.patch;
 
+	// If there are too many keys, just shallow diff
+	if (state.allowShallow && (o1Keys.length > 100 || o2Keys.length > 100)) {
+		if (o1 !== o2) {
+			if (o1Keys.length !== o2Keys.length || o1Keys.some((key) => o1[key] !== o2[key])) {
+				state.patch.push({
+					op: OpType.Replace,
+					value: o2,
+					path: path
+				});
+			}
+		}
+
+		return state;
+	}
+
 	// test all intersecting are equal, if not, then recursively compare
-	for (let i = keys.length - 1; i >= 0; --i) {
-		const key = keys[i];
+	for (let i = o2Keys.length - 1; i >= 0; --i) {
+		const key = o2Keys[i];
 		var keyPath = path + "/" + encodeSegment(key);
 		if (key in o1 && o1[key] !== o2[key]) {
 			appendChanges(o1[key], o2[key], keyPath, state);
@@ -122,9 +138,8 @@ function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
 	}
 
 	// find all keys that are no longer present in o2 and remove them
-	keys = Object.keys(o1);
-	for (let i = keys.length - 1; i >= 0; --i) {
-		const key = keys[i];
+	for (let i = o1Keys.length - 1; i >= 0; --i) {
+		const key = o1Keys[i];
 		if (!(key in o2)) {
 			var p = path + "/" + encodeSegment(key);
 			if (state.invertible) {
@@ -146,7 +161,7 @@ function appendObjectChanges(o1: any, o2: any, path: string, state: State) {
  * @returns {Object} updated diff state
  */
 function appendArrayChanges(a1: any[], a2: any[], path: string, state: State) {
-	if (state.shallowArray) {
+	if (state.allowShallow) {
 		if (a1 !== a2) {
 			if (a1.length !== a2.length || a1.some((val, i) => val !== a2[i])) {
 				state.patch.push({
